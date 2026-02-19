@@ -2,6 +2,9 @@ const Job = require('../models/Job')
 const { StatusCodes } = require('http-status-codes')
 const { BadRequestError, NotFoundError } = require('../errors')
 
+const mongoose = require("mongoose");
+const moment = require("moment");
+
 const getAllJobs = async (req, res) => {
   // we will keep the userId
   const queryObject = {
@@ -109,10 +112,32 @@ const deleteJob = async (req, res) => {
   res.status(StatusCodes.OK).send()
 }
 
+const showStats = async (req, res) => {
+  let stats = await Job.aggregate([
+    // 1- we wanna get all the jobs createdBy this user
+    { $match: { createdBy: mongoose.Types.ObjectId(req.user.userId) } } // for mongoose here we wanna convert userId from string to Mongoose objectId
+    ,
+    { $group: { _id: '$status', count: { $sum: 1 } } } // 2- we wanna group them based on status
+  ])
+  // refactor to an object with statuses as keys, and counts as values with reduce
+
+  // for each iteration, will extract the key value - the status - and add to it the value of its value - so the value of count - essentially we are returning an object of 3 properties which are statuses and their values are counts
+
+  stats = stats.reduce((acc, curr) => {
+    const { _id: title, count } = curr;
+    acc[title] = count;
+    return acc;
+  }, {})
+  console.log(stats);
+
+  res.status(StatusCodes.OK).json({ defaultStats: stats, monthlyApplications: [] })
+}
+
 module.exports = {
   createJob,
   deleteJob,
   getAllJobs,
   updateJob,
   getJob,
+  showStats
 }
