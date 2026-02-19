@@ -18,6 +18,7 @@ const jobsRouter = require('./routes/jobs');
 const notFoundMiddleware = require('./middleware/not-found');
 const errorHandlerMiddleware = require('./middleware/error-handler');
 
+app.set('trust proxy', 1)
 // adding middleware to serve the static assets from the client.
 app.use(express.static(path.resolve(__dirname, "./client/build")));
 
