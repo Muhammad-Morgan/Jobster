@@ -6,8 +6,15 @@ const UserSchema = new mongoose.Schema({
   name: {
     type: String,
     required: [true, 'Please provide name'],
-    maxlength: 50,
+    maxlength: 20,
     minlength: 3,
+    default: 'firstName'
+  },
+  lastName: {
+    type: String,
+    trim: true,
+    maxlength: 20,
+    default: 'lastName'
   },
   email: {
     type: String,
@@ -23,9 +30,17 @@ const UserSchema = new mongoose.Schema({
     required: [true, 'Please provide password'],
     minlength: 6,
   },
+  location: {
+    type: String,
+    trim: true,
+    maxlength: 20,
+    default: 'my city'
+  }
 })
 
 UserSchema.pre('save', async function () {
+  // I wanna user this.modifiedPaths() conditionally
+  if (!this.isModified('password')) return;
   const salt = await bcrypt.genSalt(10)
   this.password = await bcrypt.hash(this.password, salt)
 })

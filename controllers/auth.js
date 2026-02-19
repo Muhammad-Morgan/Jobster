@@ -5,7 +5,15 @@ const { BadRequestError, UnauthenticatedError } = require('../errors')
 const register = async (req, res) => {
   const user = await User.create({ ...req.body })
   const token = user.createJWT()
-  res.status(StatusCodes.CREATED).json({ user: { name: user.name }, token })
+  res.status(StatusCodes.CREATED).json({
+    user: {
+      name: user.name,
+      lastName: user.lastName,
+      email: user.email,
+      location: user.location,
+      token
+    }
+  })
 }
 
 const login = async (req, res) => {
@@ -24,10 +32,48 @@ const login = async (req, res) => {
   }
   // compare password
   const token = user.createJWT()
-  res.status(StatusCodes.OK).json({ user: { name: user.name }, token })
+  res.status(StatusCodes.OK).json({
+    user: {
+      name: user.name,
+      lastName: user.lastName,
+      email: user.email,
+      location: user.location,
+      token
+    }
+  })
 }
+const updateUser = async (req, res) => {
+  const { name, lastName, email, location } = req.body;
+  // checking for missing values
+  if (!email || !name || !lastName || !location) {
+    throw new BadRequestError('Please provide all values');
+  }
+  // getting the userId
+  const userId = req.user.userId;
+  // alt way to update
+  const user = await User.findOne({ _id: userId });
 
+  user.email = email;
+  user.name = name;
+  user.lastName = lastName;
+  user.location = location;
+
+  await user.save(); // calling the 'save' middleware of mongoose
+
+  const token = user.createJWT();
+
+  res.status(StatusCodes.OK).json({
+    user: {
+      name: user.name,
+      lastName: user.lastName,
+      email: user.email,
+      location: user.location,
+      token
+    }
+  })
+}
 module.exports = {
   register,
   login,
+  updateUser
 }
